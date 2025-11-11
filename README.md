@@ -23,7 +23,7 @@ Un gestor de tareas minimalista, rápido y en español, inspirado en Getting Thi
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/tu-usuario/cerebrum.git
+   git clone https://github.com/aleqcodes/cerebrum.git
    cd cerebrum
    ```
 2. Crea la base de datos e importa el esquema (y datos de ejemplo):
