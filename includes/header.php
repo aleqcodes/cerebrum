@@ -49,13 +49,19 @@
         <div id="sidebar" class="fixed md:relative top-0 left-0 h-full md:h-auto w-64 bg-white shadow-lg z-50 transform -translate-x-full md:translate-x-0 transition-transform">
             <div class="p-6">
                 <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-between">
-                    <i class="fas fa-tasks mr-2"></i>GTD
+                    <span class="flex items-center"><i class="fas fa-tasks mr-2"></i>GTD</span>
                     <button type="button" class="md:hidden inline-flex items-center px-2 py-1 text-gray-600 hover:text-gray-900" onclick="toggleSidebar()">
                         <i class="fas fa-times"></i>
                     </button>
-                    <a href="#" class="hidden md:inline-flex items-center text-sm text-gray-600 hover:text-red-600" onclick="document.getElementById('logoutForm').submit();">
-                        <i class="fas fa-right-from-bracket mr-2"></i>Salir
-                    </a>
+                    <div class="hidden md:flex items-center gap-3">
+                        <?php $nombreUsuario = $_SESSION['user_nombre'] ?? null; ?>
+                        <?php if ($nombreUsuario): ?>
+                            <span class="text-sm text-gray-600">Hola, <?php echo htmlspecialchars($nombreUsuario); ?></span>
+                        <?php endif; ?>
+                        <a href="#" class="inline-flex items-center text-sm text-gray-600 hover:text-red-600" onclick="document.getElementById('logoutForm').submit();">
+                            <i class="fas fa-right-from-bracket mr-2"></i>Salir
+                        </a>
+                    </div>
                     <form id="logoutForm" action="procesar.php" method="POST" class="hidden">
                         <input type="hidden" name="accion" value="logout">
                     </form>

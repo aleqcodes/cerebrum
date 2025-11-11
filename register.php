@@ -2,12 +2,6 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/auth.php';
 
-// Si ya hay usuarios creados, redirigir al login
-if (hayUsuarios($pdo)) {
-    header('Location: login.php');
-    exit;
-}
-
 $mensaje = isset($_GET['mensaje']) ? htmlspecialchars($_GET['mensaje']) : '';
 ?>
 <!DOCTYPE html>
@@ -15,12 +9,12 @@ $mensaje = isset($_GET['mensaje']) ? htmlspecialchars($_GET['mensaje']) : '';
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crear primer usuario - GTD</title>
+  <title>Crear cuenta - GTD</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
   <div class="w-full max-w-md bg-white shadow rounded-lg p-6">
-    <h1 class="text-2xl font-bold mb-4 text-gray-800">Crear primer usuario</h1>
+    <h1 class="text-2xl font-bold mb-4 text-gray-800">Crear cuenta</h1>
     <?php if ($mensaje): ?>
       <div class="mb-4 p-3 rounded bg-red-50 text-red-600 text-sm"><?php echo $mensaje; ?></div>
     <?php endif; ?>

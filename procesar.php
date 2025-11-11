@@ -33,11 +33,7 @@ if (!in_array($accion, $accionesPublicas)) {
     }
 }
 
-// Evitar registro cuando ya existen usuarios
-if ($accion === 'registrar_usuario' && hayUsuarios($pdo)) {
-    header('Location: login.php?mensaje=' . urlencode('Ya existe un usuario. Inicia sesión.'));
-    exit();
-}
+// Registro siempre permitido (multiusuario)
 
 try {
     switch ($accion) {
@@ -108,9 +104,9 @@ try {
             }
             
             $titulo = trim($_POST['titulo']);
-            
-            $stmt = $pdo->prepare("INSERT INTO tareas (titulo) VALUES (?)");
-            $stmt->execute([$titulo]);
+            $usuarioId = $_SESSION['user_id'];
+            $stmt = $pdo->prepare("INSERT INTO tareas (usuario_id, titulo) VALUES (?, ?)");
+            $stmt->execute([$usuarioId, $titulo]);
             
             definirRedireccion('Tarea añadida a la Bandeja de Entrada', 'success');
             break;
@@ -126,9 +122,19 @@ try {
             $fecha_vencimiento = !empty($_POST['fecha_vencimiento']) ? $_POST['fecha_vencimiento'] : null;
             $contexto = !empty($_POST['contexto']) ? trim($_POST['contexto']) : null;
             $descripcion = !empty($_POST['descripcion']) ? trim($_POST['descripcion']) : null;
+            $usuarioId = $_SESSION['user_id'];
+
+            // Validar que el proyecto pertenece al usuario
+            if (!empty($id_proyecto)) {
+                $stmt = $pdo->prepare('SELECT id FROM proyectos WHERE id = ? AND usuario_id = ?');
+                $stmt->execute([$id_proyecto, $usuarioId]);
+                if (!$stmt->fetch()) {
+                    $id_proyecto = null;
+                }
+            }
             
-            $stmt = $pdo->prepare("INSERT INTO tareas (titulo, id_proyecto, fecha_vencimiento, contexto, descripcion) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$titulo, $id_proyecto, $fecha_vencimiento, $contexto, $descripcion]);
+            $stmt = $pdo->prepare("INSERT INTO tareas (usuario_id, titulo, id_proyecto, fecha_vencimiento, contexto, descripcion) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$usuarioId, $titulo, $id_proyecto, $fecha_vencimiento, $contexto, $descripcion]);
             
             definirRedireccion('Tarea creada exitosamente', 'success');
             break;
@@ -146,15 +152,25 @@ try {
             $contexto = !empty($_POST['contexto']) ? trim($_POST['contexto']) : null;
             $descripcion = !empty($_POST['descripcion']) ? trim($_POST['descripcion']) : null;
             $estado = $_POST['estado'];
+            $usuarioId = $_SESSION['user_id'];
             
             // Validar estado
             $estados_validos = ['pendiente', 'en_espera', 'completada'];
             if (!in_array($estado, $estados_validos)) {
                 $estado = 'pendiente';
             }
+
+            // Validar proyecto del usuario
+            if (!empty($id_proyecto)) {
+                $stmt = $pdo->prepare('SELECT id FROM proyectos WHERE id = ? AND usuario_id = ?');
+                $stmt->execute([$id_proyecto, $usuarioId]);
+                if (!$stmt->fetch()) {
+                    $id_proyecto = null;
+                }
+            }
             
-            $stmt = $pdo->prepare("UPDATE tareas SET titulo = ?, id_proyecto = ?, fecha_vencimiento = ?, contexto = ?, descripcion = ?, estado = ? WHERE id = ?");
-            $stmt->execute([$titulo, $id_proyecto, $fecha_vencimiento, $contexto, $descripcion, $estado, $id]);
+            $stmt = $pdo->prepare("UPDATE tareas SET titulo = ?, id_proyecto = ?, fecha_vencimiento = ?, contexto = ?, descripcion = ?, estado = ? WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$titulo, $id_proyecto, $fecha_vencimiento, $contexto, $descripcion, $estado, $id, $usuarioId]);
             
             definirRedireccion('Tarea actualizada exitosamente', 'success');
             break;
@@ -167,12 +183,13 @@ try {
             
             $id = $_POST['id'];
             $estado_actual = $_POST['estado_actual'];
+            $usuarioId = $_SESSION['user_id'];
             
             // Alternar entre pendiente y completada
             $nuevo_estado = ($estado_actual == 'completada') ? 'pendiente' : 'completada';
             
-            $stmt = $pdo->prepare("UPDATE tareas SET estado = ? WHERE id = ?");
-            $stmt->execute([$nuevo_estado, $id]);
+            $stmt = $pdo->prepare("UPDATE tareas SET estado = ? WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$nuevo_estado, $id, $usuarioId]);
             
             definirRedireccion('', 'success'); // Sin mensaje para no interrumpir la experiencia
             break;
@@ -184,9 +201,9 @@ try {
             }
             
             $id = $_POST['id'];
-            
-            $stmt = $pdo->prepare("DELETE FROM tareas WHERE id = ?");
-            $stmt->execute([$id]);
+            $usuarioId = $_SESSION['user_id'];
+            $stmt = $pdo->prepare("DELETE FROM tareas WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$id, $usuarioId]);
             
             definirRedireccion('Tarea eliminada exitosamente', 'success');
             break;
@@ -199,9 +216,9 @@ try {
             
             $nombre = trim($_POST['nombre']);
             $descripcion = !empty($_POST['descripcion']) ? trim($_POST['descripcion']) : null;
-            
-            $stmt = $pdo->prepare("INSERT INTO proyectos (nombre, descripcion) VALUES (?, ?)");
-            $stmt->execute([$nombre, $descripcion]);
+            $usuarioId = $_SESSION['user_id'];
+            $stmt = $pdo->prepare("INSERT INTO proyectos (usuario_id, nombre, descripcion) VALUES (?, ?, ?)");
+            $stmt->execute([$usuarioId, $nombre, $descripcion]);
             
             definirRedireccion('Proyecto creado exitosamente', 'success');
             break;
@@ -215,9 +232,9 @@ try {
             $id = $_POST['id'];
             $nombre = trim($_POST['nombre']);
             $descripcion = !empty($_POST['descripcion']) ? trim($_POST['descripcion']) : null;
-            
-            $stmt = $pdo->prepare("UPDATE proyectos SET nombre = ?, descripcion = ? WHERE id = ?");
-            $stmt->execute([$nombre, $descripcion, $id]);
+            $usuarioId = $_SESSION['user_id'];
+            $stmt = $pdo->prepare("UPDATE proyectos SET nombre = ?, descripcion = ? WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$nombre, $descripcion, $id, $usuarioId]);
             
             definirRedireccion('Proyecto actualizado exitosamente', 'success');
             break;
@@ -229,9 +246,10 @@ try {
             }
             
             $id = $_POST['id'];
-            // Eliminar proyecto (las tareas asociadas quedarán en la Bandeja por ON DELETE SET NULL)
-            $stmt = $pdo->prepare("DELETE FROM proyectos WHERE id = ?");
-            $stmt->execute([$id]);
+            $usuarioId = $_SESSION['user_id'];
+            // Eliminar solo si pertenece al usuario
+            $stmt = $pdo->prepare("DELETE FROM proyectos WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$id, $usuarioId]);
             
             definirRedireccion('Proyecto eliminado exitosamente', 'success');
             break;

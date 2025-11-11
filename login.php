@@ -28,7 +28,7 @@ $mensaje = isset($_GET['mensaje']) ? htmlspecialchars($_GET['mensaje']) : '';
       <div class="mb-4 p-3 rounded bg-yellow-50 text-yellow-700 text-sm">
         No hay usuarios creados. Crea el primer usuario para proteger tus tareas.
       </div>
-      <a href="register.php" class="inline-flex items-center justify-center w-full py-2 px-3 rounded bg-blue-600 text-white hover:bg-blue-700">Crear primer usuario</a>
+      <a href="register.php" class="inline-flex items-center justify-center w-full py-2 px-3 rounded bg-blue-600 text-white hover:bg-blue-700">Crear cuenta</a>
     <?php else: ?>
       <form action="procesar.php" method="POST" class="space-y-4">
         <input type="hidden" name="accion" value="login" />
@@ -42,6 +42,9 @@ $mensaje = isset($_GET['mensaje']) ? htmlspecialchars($_GET['mensaje']) : '';
         </div>
         <button type="submit" class="w-full py-2 px-3 rounded bg-blue-600 text-white hover:bg-blue-700">Entrar</button>
       </form>
+      <div class="mt-4 text-center">
+        <a href="register.php" class="text-sm text-blue-600 hover:text-blue-800">Crear cuenta nueva</a>
+      </div>
     <?php endif; ?>
   </div>
 </body>
